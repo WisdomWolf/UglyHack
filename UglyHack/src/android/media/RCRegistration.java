@@ -3,6 +3,7 @@ package android.media;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -212,24 +213,26 @@ public class RCRegistration {
 	}
 	
 	public void testMethod(){
+		
+		AudioService outer = new AudioService(mContext);
 		// List all available constructors.
         // We must use the method getDeclaredConstructors() instead
         // of getConstructors() to get also private constructors.
-        for (Constructor<?> ctor : OuterClass.InnerClass.class
+        for (Constructor<?> ctor : AudioService.AudioHandler.class
                 .getDeclaredConstructors()) {
             System.out.println(ctor);
         }
 
         try {
             // Try to get the constructor with the expected signature.
-            Constructor<InnerClass> ctor = OuterClass.InnerClass.class
-                    .getDeclaredConstructor(OuterClass.class);
+            Constructor<AudioHandler> ctor = AudioService.AudioHandler.class
+                    .getDeclaredConstructor(AudioService.class);
             // This forces the security manager to allow a call
             ctor.setAccessible(true);
 
             // the call
             try {
-                OuterClass.InnerClass inner = ctor.newInstance(outer);
+                AudioService.AudioHandler inner = ctor.newInstance(outer);
                 System.out.println(inner);
             } catch (InstantiationException e) {
                 // TODO Auto-generated catch block
@@ -251,5 +254,26 @@ public class RCRegistration {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+	}
+	
+	public void testMethodTwo(){
+		//we need an outer class object to use the inner object constructor
+        //(the inner class object needs to know about its parent object)
+        AudioService outerObject = new AudioService(mContext);
+
+        //let's get the inner class 
+        //(we know that the outer class has only one inner class, so we can use index 0)
+        Class<?> innerClass = AudioService.class.getDeclaredClasses()[0];
+
+        //we need the constructor to pass the outer object info and change its 
+        //accessibility
+        Constructor<?> constructor = innerClass.getDeclaredConstructors()[0];
+
+        //the default constructor of the private class is also private, so we need to
+        //make it accessible
+        constructor.setAccessible(true);
+
+        //now we are ready to create an inner class object
+        Object innerObject = constructor.newInstance(outerObject);
 	}
 }
